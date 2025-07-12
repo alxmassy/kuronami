@@ -1,7 +1,7 @@
 # Team Kuronami
--Team leader Aryan           Gmail - engineer.aryan.work@gmail.com
--Member 1 Alex Massy         Gmail - work.alexmassy@gmail.com
--Member 2 Aryan Sharma       Gmail - developeraryan23@gmail.com
+-Team leader Aryan           Gmail - engineer.aryan.work@gmail.com  <br />
+-Member 1 Alex Massy         Gmail - work.alexmassy@gmail.com  <br />
+-Member 2 Aryan Sharma       Gmail - developeraryan23@gmail.com  <br />
 -Member 3 Lakshay Jangra     Gmail - jangralakshay14@gmail.com
 
 🔁 Skill Swap Platform
