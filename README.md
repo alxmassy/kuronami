@@ -47,7 +47,7 @@ The **Skill Swap Platform** is a mini-application designed to foster peer-to-pee
 - **User Management**: Ban users who violate community policies
 - **Swap Oversight**: Monitor all swap activity (pending, accepted, cancelled)
 - **Announcements**: Send platform-wide messages (e.g., updates, maintenance alerts)
-- **Analytics**: Download reports on:
+- **Analytics**: Download reports on :
   - User activity
   - Feedback logs
   - Swap statistics
