@@ -170,6 +170,41 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
+// Get all users (public) - GET /api/users
+app.get('/api/users', async (req, res) => {
+    try {
+        const {skill} = req.query;
+        const whereCondition = {
+            isPublic: true
+        };
+        if (skill) {
+            whereCondition.skillsOffered = {
+                contains: skill,
+            };
+        }
+        const userFromDb = await prisma.user.findMany({
+            where: whereCondition,
+            select: {
+                id: true,
+                name: true,
+                skillsOffered: true,
+                skillsWanted: true,
+                availability: true,
+                isPublic: true,
+            }
+        });
+        const usersForFrontend = userFromDb.map(user => ({
+            ...user,
+            skillsOffered: user.skillsOffered.split(',').filter(s => s),
+            skillsWanted: user.skillsWanted.split(',').filter(s => s),
+        }));
+        res.json(usersForFrontend);
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // Start the server
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {    
