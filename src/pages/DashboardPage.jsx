@@ -20,7 +20,7 @@ const DashboardPage = () => {
         const params = searchTerm ? { skill: searchTerm } : {};
         const response = await getAllUsers(params);
         // Filter out the current user from the list
-        const filteredUsers = response.data.filter(user => user.id !== currentUser.id);
+        const filteredUsers = response.data.filter(user => user.id !== currentUser?.id);
         setUsers(filteredUsers);
       } catch (error) {
         console.error("Failed to fetch users", error);
@@ -28,13 +28,16 @@ const DashboardPage = () => {
       setLoading(false);
     };
 
-    const timerId = setTimeout(() => {
-        fetchUsers();
-    }, 500);
+    // Only fetch if currentUser is loaded
+    if (currentUser) {
+      const timerId = setTimeout(() => {
+          fetchUsers();
+      }, 500);
 
-    return () => clearTimeout(timerId);
+      return () => clearTimeout(timerId);
+    }
 
-  }, [searchTerm, currentUser.id]);
+  }, [searchTerm, currentUser?.id]);
 
   const handleRequestSwap = (user) => {
     setSelectedUser(user);
@@ -60,14 +63,14 @@ const DashboardPage = () => {
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </Box>
-      {loading ? (
+      {loading || !currentUser ? (
         <Box display="flex" justifyContent="center"><CircularProgress /></Box>
       ) : (
         users.map(user => (
           <UserCard key={user.id} user={user} onRequestSwap={handleRequestSwap} />
         ))
       )}
-       {users.length === 0 && !loading && (
+       {users.length === 0 && !loading && currentUser && (
         <Typography>No users found. Try a different search.</Typography>
       )}
       {selectedUser && (
