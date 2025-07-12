@@ -2,7 +2,7 @@
 -Team leader Aryan           Gmail - engineer.aryan.work@gmail.com  <br />
 -Member 1 Alex Massy         Gmail - work.alexmassy@gmail.com  <br />
 -Member 2 Aryan Sharma       Gmail - developeraryan23@gmail.com  <br />
--Member 3 Lakshay Jangra     Gmail - jangralakshay14@gmail.com, 
+-Member 3 Lakshay Jangra     Gmail - jangralakshay14@gmail.com, <br />
 -Member 4 Garv Sharma        Gmail - garvsharma9847@gmail.com
 
 🔁 Skill Swap Platform
