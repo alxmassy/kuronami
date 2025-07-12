@@ -182,7 +182,7 @@ app.get('/api/users', async (req, res) => {
                 contains: skill,
             };
         }
-        const userFromDb = await prisma.user.findMany({
+        const usersFromDb = await prisma.user.findMany({
             where: whereCondition,
             select: {
                 id: true,
@@ -193,7 +193,7 @@ app.get('/api/users', async (req, res) => {
                 isPublic: true,
             }
         });
-        const usersForFrontend = userFromDb.map(user => ({
+        const usersForFrontend = usersFromDb.map(user => ({
             ...user,
             skillsOffered: user.skillsOffered.split(',').filter(s => s),
             skillsWanted: user.skillsWanted.split(',').filter(s => s),
@@ -203,6 +203,108 @@ app.get('/api/users', async (req, res) => {
         console.error('Error fetching users:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
+});
+
+// Create a new swap request (secured) - POST /api/swaps
+app.post('/api/swaps', authenticateToken, async (req, res) => {
+  try {
+    const requesterId = req.user.userId;
+    const { receiverId, skillOfferedByRequester, skillWantedByRequester } = req.body;
+    if (requesterId === receiverId) {
+      return res.status(400).json({ message: "You cannot create a swap with yourself." });
+    }
+    // Create the swap request in the database
+    const newSwap = await prisma.swap.create({
+      data: {
+        requesterId,
+        receiverId,
+        skillOfferedByRequester,
+        skillWantedByRequester,
+        status: 'pending',
+      },
+    });
+    res.status(201).json(newSwap);
+  } catch (error) {
+    console.error("Create swap error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// Get all swap requests for the current user (secured) - GET /api/swaps/me
+app.get('/api/swaps/me', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    const incomingSwaps = await prisma.swap.findMany({
+      where: { receiverId: userId },
+      include: { requester: { select: { id: true, name: true } } },
+    });
+    const outgoingSwaps = await prisma.swap.findMany({
+      where: { requesterId: userId },
+      include: { receiver: { select: { id: true, name: true } } },
+    });
+    res.json({incoming: incomingSwaps, outgoing: outgoingSwaps});
+  } catch (error) {
+    console.error("Get swaps error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// Accept or reject a swap request (secured) - PUT /api/swaps/:id
+app.put('/api/swaps/:id', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const swapId = parseInt(req.params.id);
+    const { status } = req.body;
+    if (status !== 'accepted' && status !== 'rejected') {
+      return res.status(400).json({ message: "Invalid status." });
+    }
+    const swapToUpdate = await prisma.swap.findUnique({ where: { id: swapId } });
+    if (!swapToUpdate || swapToUpdate.receiverId !== userId) {
+      return res.status(403).json({ message: "Forbidden: You cannot modify this swap." });
+    }
+    
+    // Ensure you can't accept/reject a non-pending swap
+    if (swapToUpdate.status !== 'pending') {
+        return res.status(400).json({ message: `This swap is already ${swapToUpdate.status}.` });
+    }
+    const updatedSwap = await prisma.swap.update({
+      where: { id: swapId },
+      data: { status },
+    });
+    res.json(updatedSwap);
+  } catch (error) {
+    console.error("Update swap error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// Delete a swap request (secured) - DELETE /api/swaps/:id
+app.delete('/api/swaps/:id', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const swapId = parseInt(req.params.id);
+
+    const swapToDelete = await prisma.swap.findUnique({ where: { id: swapId } });
+
+    // SECURITY CHECK: Ensure the current user is the one who made the request
+    if (!swapToDelete || swapToDelete.requesterId !== userId) {
+      return res.status(403).json({ message: "Forbidden: You cannot delete this swap." });
+    }
+
+    // STATUS CHECK: You can only delete pending requests
+    if (swapToDelete.status !== 'pending') {
+      return res.status(400).json({ message: "Cannot delete a swap that is no longer pending." });
+    }
+
+    // Delete the swap
+    await prisma.swap.delete({ where: { id: swapId } });
+
+    res.sendStatus(204);
+  } catch (error) {
+    console.error("Delete swap error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 });
 
 // Start the server
